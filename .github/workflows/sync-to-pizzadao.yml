@@ -3,31 +3,35 @@ name: Sync to PizzaDAO Repo
 on:
   push:
     branches:
-      - main          # runs only when main is updated
+      - main            # run only on main-branch pushes
 
 jobs:
   sync:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Check out the code from this (CRXSS) repo
+      # 1) Check out the current CRXSS repo content
       - name: Checkout code
         uses: actions/checkout@v3
 
       # 2) Add PizzaDAO remote and push
       - name: Push to PizzaDAO repo
         env:
-          TOKEN: ${{secrets.PIZZADAO_PUSH_TOKEN}}   # <-- secret must be named exactly
+          TOKEN: ${{secrets.PIZZADAO_PUSH_TOKEN}}   # <-- secret must exist with this exact name
         run: |
-          # Debug: show token length (masked, safe - just prints a number)
+          # Remove Actions' default auth header so our PAT is used
+          git config --unset-all http.https://github.com/.extraheader || true
+
+          # Debug: print token length (masked; just shows a number)
           echo "TOKEN-len=${#TOKEN}"
 
-          # Git identity for the commit
+          # Set git identity for the push commit
           git config --global user.email "sync-bot@github.com"
           git config --global user.name  "Pizza Sync Bot"
 
-          # Add remote using token
+          # Add remote using personal access token
           git remote add pizzadao https://x-access-token:$TOKEN@github.com/PizzaDAO/Bitcoin-Pizza_Blastoff.git
 
           # Force-push main → main on PizzaDAO repo
           git push pizzadao main --force
+
