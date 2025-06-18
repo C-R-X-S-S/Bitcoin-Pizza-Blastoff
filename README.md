@@ -10,7 +10,7 @@ Built to honor Bitcoin Pizza Day and the community spirit of PizzaDAO's Global P
 Bitcoin Pizza Blastoff was created in celebration of the [Global Pizza Party](https://globalpizza.party/),
 an annual event organized by **[PizzaDAO](https://twitter.com/Pizza_DAO)**.
 
-This game pays tribute to the chaos, humor, and decentralization that fuels PizzaDAO's mission to spread pizza and bitcoin love around the world.
+This game pays tribute to the fun, humor, and decentralization that fuels PizzaDAO's mission to spread pizza and bitcoin love around the world.
 
 ---
 
