@@ -14,7 +14,7 @@ jobs:
 
       - name: Push to PizzaDAO repo
         env:
-          TOKEN: ${{ secrets.PIZZADAO_PUSH_TOKEN }}
+          TOKEN: ${{secrets.PIZZADAO_PUSH_TOKEN}}
         run: |
           git config --global user.email "sync-bot@github.com"
           git config --global user.name "Pizza Sync Bot"
