@@ -1,8 +1,22 @@
-- name: Push to PizzaDAO repo
-  env:
-    TOKEN: ${{ secrets.PIZZADAO_PUSH_TOKEN }}
-  run: |
-    git config --global user.email "sync-bot@github.com"
-    git config --global user.name "Pizza Sync Bot"
-    git remote add pizzadao https://$TOKEN@github.com/PizzaDAO/Bitcoin-Pizza_Blastoff.git
-    git push pizzadao main --force
+name: Sync to PizzaDAO Repo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Push to PizzaDAO repo
+        env:
+          TOKEN: ${{ secrets.PIZZADAO_PUSH_TOKEN }}
+        run: |
+          git config --global user.email "sync-bot@github.com"
+          git config --global user.name "Pizza Sync Bot"
+          git remote add pizzadao https://$TOKEN@github.com/PizzaDAO/Bitcoin-Pizza_Blastoff.git
+          git push pizzadao main --force
