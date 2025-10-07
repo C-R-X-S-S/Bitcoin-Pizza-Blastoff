@@ -2507,9 +2507,25 @@
       }
     }
     
+    // Sanitize HTML to prevent XSS attacks
+    function sanitizeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    
     // Save player score with name
     function savePlayerScore() {
-      const playerName = document.getElementById('player-name-input').value.trim() || 'Anon';
+      let playerName = document.getElementById('player-name-input').value.trim() || 'Anon';
+      
+      // Strip any HTML tags and limit length
+      playerName = sanitizeHTML(playerName).substring(0, 15);
+      
+      // If name becomes empty after sanitization, use default
+      if (!playerName || playerName.length === 0) {
+        playerName = 'Anon';
+      }
+      
       const finalScore = parseInt(localStorage.getItem('tempScore') || '0');
       
       console.log(`Saving score for ${playerName}: ${finalScore}`);
@@ -2632,7 +2648,7 @@
         const li = document.createElement('li');
         li.innerHTML = `
           <span class="rank">#${index + 1}</span>
-          <span class="name">${name}</span>
+          <span class="name">${sanitizeHTML(name)}</span>
           <span class="score">${score}</span>
         `;
         
@@ -3695,7 +3711,16 @@
     
     // Save player score to Supabase
     savePlayerScore = async function() {
-      const playerName = document.getElementById('player-name-input').value.trim() || 'Anon';
+      let playerName = document.getElementById('player-name-input').value.trim() || 'Anon';
+      
+      // Strip any HTML tags and limit length
+      playerName = sanitizeHTML(playerName).substring(0, 15);
+      
+      // If name becomes empty after sanitization, use default
+      if (!playerName || playerName.length === 0) {
+        playerName = 'Anon';
+      }
+      
       const finalScore = parseInt(localStorage.getItem('tempScore') || '0');
       const playerId = getOrCreatePlayerId();
       
@@ -3778,7 +3803,7 @@
           const li = document.createElement('li');
           li.innerHTML = `
             <span class="rank">#${index + 1}</span>
-            <span class="name">${entry.player_name}</span>
+            <span class="name">${sanitizeHTML(entry.player_name)}</span>
             <span class="score">${entry.score}</span>
           `;
           
