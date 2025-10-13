@@ -2527,8 +2527,9 @@
       }
       
       const finalScore = parseInt(localStorage.getItem('tempScore') || '0');
+      const sessionDuration = Math.floor((Date.now() - gameStartTimestamp) / 1000); // in seconds
       
-      console.log(`Saving score for ${playerName}: ${finalScore}`);
+      console.log(`Saving score for ${playerName}: ${finalScore} (session: ${sessionDuration}s)`);
       
       // Hide the name input form after saving
       document.getElementById('player-name-form').style.display = 'none';
@@ -3727,11 +3728,20 @@
       console.log(`Saving score for ${playerName}: ${finalScore} to Supabase`);
       
       try {
-        // Save to Supabase
+        // Calculate session duration
+        const sessionDuration = Math.floor((Date.now() - gameStartTimestamp) / 1000); // in seconds
+        const sessionStart = new Date(gameStartTimestamp).toISOString();
+        
+        // Save to Supabase with session tracking
         const { data, error } = await supabaseClient
           .from('leaderboard')
           .insert([
-            { player_name: playerName, score: finalScore }
+            { 
+              player_name: playerName, 
+              score: finalScore,
+              session_duration: sessionDuration,
+              session_start: sessionStart
+            }
           ]);
           
         if (error) {
