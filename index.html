@@ -384,8 +384,8 @@
       </ul>
     </div>
     
-    <button id="retry-button" onclick="restartGame()">Play Again</button>
-    <button id="main-menu-button" onclick="showStartScreen()">Main Menu</button>
+    <button id="retry-button">Play Again</button>
+    <button id="main-menu-button">Main Menu</button>
     
     <!-- Add creator credit with hyperlink -->
     <div style="margin-top: 15px; display: flex; justify-content: center; gap: 30px;">
@@ -463,9 +463,20 @@
 
     // Game state
     let gameActive = false;
-    let animationFrameId = null;
+    let animationFrameId = null; // Game animation loop ID
+    let masterLoopId = null; // Menu/render loop ID
     let audioInitialized = false; // Track if audio has been initialized
     let videoHasPlayed = false; // Permanent flag to track if video has been played in this session
+    
+    // Audio/Music state
+    let currentMusic = null;
+    let musicVolume = 0.7;
+    let musicEnabled = true;
+    
+    // Session tracking for heartbeat verification
+    let currentSessionId = null;
+    let heartbeatInterval = null;
+    let heartbeatCount = 0;
 
     // Create colored fallback textures
     function createFallbackTexture(color) {
@@ -2015,7 +2026,10 @@
 
     // Game loop
     function animate(time) {
-      if (gameOver) return;
+      // Safety check: only run if game is actually active
+      if (!gameActive || gameOver) {
+        return;
+      }
       
       // If respawning, just render the scene but don't update game state
       if (isRespawning) {
@@ -2023,9 +2037,6 @@
         animationFrameId = requestAnimationFrame(animate);
         return;
       }
-
-      // Reset animation frame ID when a new frame starts
-      animationFrameId = null;
       
       if (gameStartTime === 0) {
         gameStartTime = time;
@@ -2312,17 +2323,6 @@
         e.stopPropagation();
       });
       
-      // Ensure the buttons in the game over screen work without triggering flap
-      document.getElementById('retry-button').addEventListener('click', function(e) {
-        e.stopPropagation();
-        restartGame();
-      });
-      
-      document.getElementById('main-menu-button').addEventListener('click', function(e) {
-        e.stopPropagation();
-        showStartScreen();
-      });
-      
       document.getElementById('save-score-btn').addEventListener('click', function(e) {
         e.stopPropagation();
         savePlayerScore();
@@ -2504,6 +2504,12 @@
           cancelAnimationFrame(animationFrameId);
           animationFrameId = null;
         }
+        
+        // Mark game as inactive
+        gameActive = false;
+        
+        // Start the menu render loop for background animation
+        startRenderLoop();
       }
     }
     
@@ -2512,6 +2518,103 @@
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    }
+    
+    // ============================================
+    // SESSION TRACKING & HEARTBEAT SYSTEM
+    // ============================================
+    
+    // Create a new session when game starts
+    async function createGameSession() {
+      try {
+        const { data: session, error } = await supabaseClient
+          .from('game_sessions')
+          .insert([{
+            player_id: getOrCreatePlayerId(),
+            heartbeat_count: 0
+          }])
+          .select()
+          .single();
+        
+        if (error) {
+          console.error("Failed to create session:", error);
+          return null;
+        }
+        
+        currentSessionId = session.id;
+        heartbeatCount = 0;
+        console.log("✅ Session created:", currentSessionId);
+        return session;
+      } catch (err) {
+        console.error("Error creating session:", err);
+        return null;
+      }
+    }
+    
+    // Send heartbeat to server
+    async function sendHeartbeat() {
+      if (!currentSessionId || !gameActive || gameOver) return;
+      
+      try {
+        heartbeatCount++;
+        
+        const { error } = await supabaseClient
+          .from('game_sessions')
+          .update({
+            heartbeat_count: heartbeatCount,
+            last_heartbeat: new Date().toISOString()
+          })
+          .eq('id', currentSessionId);
+        
+        if (error) {
+          console.error("Heartbeat failed:", error);
+        } else {
+          console.log(`💓 Heartbeat ${heartbeatCount} sent`);
+        }
+      } catch (err) {
+        console.error("Error sending heartbeat:", err);
+      }
+    }
+    
+    // Start heartbeat interval
+    function startHeartbeat() {
+      // Clear any existing interval
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
+      
+      // Send heartbeat every 10 seconds
+      heartbeatInterval = setInterval(sendHeartbeat, 10000);
+      console.log("💓 Heartbeat system started (10 second interval)");
+    }
+    
+    // Stop heartbeat interval
+    function stopHeartbeat() {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+        console.log("💓 Heartbeat system stopped");
+      }
+    }
+    
+    // Mark session as complete
+    async function completeGameSession() {
+      if (!currentSessionId) return;
+      
+      try {
+        const { error } = await supabaseClient
+          .from('game_sessions')
+          .update({ active: false })
+          .eq('id', currentSessionId);
+        
+        if (error) {
+          console.error("Failed to complete session:", error);
+        } else {
+          console.log("✅ Session completed");
+        }
+      } catch (err) {
+        console.error("Error completing session:", err);
+      }
     }
     
     // Save player score with name
@@ -2670,6 +2773,15 @@
       // Show start screen
       document.getElementById('start-screen').style.display = 'flex';
       
+      // Mark game as inactive
+      gameActive = false;
+      
+      // Stop gameplay animation loop
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      
       // Switch to menu music
       stopBackgroundMusic();
       playBackgroundMusic('menuMusic');
@@ -2680,12 +2792,18 @@
       // Reset background positions to ensure we start from the beginning
       resetBackgroundPositions();
       
-      // Also force the background to stop scrolling completely
-      backgroundSpeed = 0;
+      // Set slow background speed for menu
+      backgroundSpeed = 0.5;
+      
+      // Start the menu render loop
+      startRenderLoop();
     }
     
     // Reset game state without starting animation
     function resetGameState() {
+      // Stop heartbeats if active
+      stopHeartbeat();
+      
       // Reset all game variables
       gameOver = false;
       isRespawning = false;
@@ -2699,6 +2817,10 @@
       playerVelocity = 0;
       gameStartTime = 0;
       backgroundSpeed = 0.5; // Slow for start screen
+      
+      // Reset session tracking
+      currentSessionId = null;
+      heartbeatCount = 0;
       
       // Reset player texture
       updatePlayerTexture();
@@ -2716,11 +2838,32 @@
     }
     
     // Restart game
-    function restartGame() {
-      // Clear any pending animation frame first
+    async function restartGame() {
+      console.log("🔄 Restarting game...");
+      
+      // CRITICAL: Set game as active FIRST to prevent render loop from continuing
+      gameActive = true;
+      gameOver = false;
+      
+      // Clear any pending game animation frame first
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
+      }
+      
+      // Stop the menu render loop if it's running (will now exit immediately due to gameActive check)
+      stopRenderLoop();
+      
+      // Small delay to let any queued frames exit
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Stop any existing heartbeat
+      stopHeartbeat();
+      
+      // Stop any existing session heartbeat (analytics)
+      if (sessionHeartbeatInterval) {
+        clearInterval(sessionHeartbeatInterval);
+        sessionHeartbeatInterval = null;
       }
       
       // Hide any UI overlays
@@ -2740,21 +2883,32 @@
       // Reset background positions to ensure proper scroll restart
       resetBackgroundPositions();
       
-      // Set the game as active
-      gameActive = true;
-      gameOver = false;
-      
       // Reset time and speed values
       gameStartTime = 0;
       backgroundSpeed = 2;
       
+      // Reset analytics timestamp
+      gameStartTimestamp = Date.now();
+      
       // Make sure player texture is updated
       updatePlayerTexture();
+      
+      // Create new session and start heartbeats
+      await createGameSession();
+      startHeartbeat();
+      
+      // Reinitialize analytics for the new game session
+      const analytics = initializeAnalytics();
+      trackGameEvent('game_restart', {
+        player_id: analytics.playerId,
+        session_id: analytics.sessionId,
+        current_scene: currentBackgroundIndex
+      });
       
       // Start animation loop
       animationFrameId = requestAnimationFrame(animate);
       
-      console.log("Game restarted");
+      console.log("✅ Game restarted successfully");
     }
     
     // Function to reset background positions
@@ -2783,16 +2937,47 @@
       checkBackgroundVisibility();
     }
 
-    // Start the render loop without gameplay
+    // Start the render loop without gameplay (for menu/game over screens)
     function startRenderLoop() {
-      // Ensure background is visible
-      ensureBackgroundsVisible();
+      // Stop any existing render loop first
+      if (masterLoopId) {
+        cancelAnimationFrame(masterLoopId);
+        masterLoopId = null;
+      }
       
-      // Animate background even before game starts
-      updateBackgrounds(0.5); // Slower speed before game starts
+      // Don't start if game is already active
+      if (gameActive) {
+        console.log("🚫 Cannot start render loop - game is active");
+        return;
+      }
       
-      renderer.render(scene, camera);
-      requestAnimationFrame(startRenderLoop);
+      function renderLoop() {
+        // Safety check: only continue if game is not active
+        if (gameActive) {
+          return;
+        }
+        
+        // Ensure background is visible
+        ensureBackgroundsVisible();
+        
+        // Animate background slowly for visual effect
+        updateBackgrounds(0.5);
+        
+        renderer.render(scene, camera);
+        masterLoopId = requestAnimationFrame(renderLoop);
+      }
+      
+      console.log("▶️ Render loop started");
+      masterLoopId = requestAnimationFrame(renderLoop);
+    }
+    
+    // Stop the render loop
+    function stopRenderLoop() {
+      if (masterLoopId) {
+        cancelAnimationFrame(masterLoopId);
+        masterLoopId = null;
+        console.log("🛑 Render loop stopped");
+      }
     }
     
     // Initialize the scene
@@ -2801,9 +2986,16 @@
     // Start game button - remove potentially conflicting handler
     // document.getElementById('start-button').addEventListener('click', startGame);
     
-    function startGame() {
+    async function startGame() {
       document.getElementById('start-screen').style.display = 'none';
       gameActive = true;
+      
+      // Stop the menu render loop
+      stopRenderLoop();
+      
+      // Create session and start heartbeat tracking
+      await createGameSession();
+      startHeartbeat();
       
       // Stop menu music and play gameplay music
       stopBackgroundMusic();
@@ -3119,10 +3311,7 @@
       setTimeout(checkBackgroundVisibility, 500);
     }
 
-    // Background music elements
-    let currentMusic = null;
-    let musicVolume = 0.7; // 70% volume for background music
-    let musicEnabled = true; // Flag to control music on/off
+    // Background music elements (variables declared at top of script)
 
     // Function to test file existence
     function checkFileExists(url) {
@@ -3368,8 +3557,30 @@
       }, 500);
     });
     
-    // Setup event listeners for game over screen
+    // Setup event listeners for game over screen (with handlers to prevent duplicates)
+    let gameOverListenersSetup = false;
+    
+    function handleRetryClick(e) {
+      e.stopPropagation();
+      console.log("🎮 Retry button clicked (single handler)");
+      stopBackgroundMusic();
+      playGameplayMusic();
+      restartGame();
+    }
+    
+    function handleMainMenuClick(e) {
+      e.stopPropagation();
+      stopBackgroundMusic();
+      playBackgroundMusic('menuMusic');
+      showStartScreen();
+    }
+    
     function setupGameOverEventListeners() {
+      if (gameOverListenersSetup) {
+        console.log("⚠️ Game over listeners already setup, skipping");
+        return;
+      }
+      
       const gameOverElement = document.getElementById('game-over');
       if (gameOverElement) {
         gameOverElement.addEventListener('click', function(e) {
@@ -3379,23 +3590,16 @@
       
       const retryButton = document.getElementById('retry-button');
       if (retryButton) {
-        retryButton.addEventListener('click', function(e) {
-          e.stopPropagation();
-          stopBackgroundMusic();
-          playGameplayMusic();
-          restartGame();
-        });
+        retryButton.addEventListener('click', handleRetryClick);
       }
       
       const mainMenuButton = document.getElementById('main-menu-button');
       if (mainMenuButton) {
-        mainMenuButton.addEventListener('click', function(e) {
-          e.stopPropagation();
-          stopBackgroundMusic();
-          playBackgroundMusic('menuMusic');
-          showStartScreen();
-        });
+        mainMenuButton.addEventListener('click', handleMainMenuClick);
       }
+      
+      gameOverListenersSetup = true;
+      console.log("✅ Game over event listeners setup complete");
     }
     
     // Add a pre-start music function for when we click on the page anywhere
@@ -3715,7 +3919,7 @@
       let playerName = document.getElementById('player-name-input').value.trim() || 'Anon';
       
       // Strip any HTML tags and limit length
-      playerName = sanitizeHTML(playerName).substring(0, 15);
+      playerName = sanitizeHTML(playerName).substring(0, 30);
       
       // If name becomes empty after sanitization, use default
       if (!playerName || playerName.length === 0) {
@@ -3725,22 +3929,36 @@
       const finalScore = parseInt(localStorage.getItem('tempScore') || '0');
       const playerId = getOrCreatePlayerId();
       
-      console.log(`Saving score for ${playerName}: ${finalScore} to Supabase`);
+      // Stop heartbeats and complete session
+      stopHeartbeat();
+      await completeGameSession();
+      
+      // Calculate verified duration from heartbeats
+      const verifiedDuration = heartbeatCount * 10; // 10 seconds per heartbeat
+      const clientDuration = Math.floor((Date.now() - gameStartTimestamp) / 1000);
+      
+      console.log(`Saving score for ${playerName}: ${finalScore}`);
+      console.log(`💓 Heartbeats: ${heartbeatCount}`);
+      console.log(`✅ Verified duration: ${verifiedDuration}s`);
+      console.log(`📱 Client duration: ${clientDuration}s`);
+      
+      // Validation check - warn if no session
+      if (!currentSessionId) {
+        console.warn("⚠️ No session ID - score may be rejected");
+      }
       
       try {
-        // Calculate session duration
-        const sessionDuration = Math.floor((Date.now() - gameStartTimestamp) / 1000); // in seconds
-        const sessionStart = new Date(gameStartTimestamp).toISOString();
-        
-        // Save to Supabase with session tracking
+        // Save to Supabase with verified heartbeat data
         const { data, error } = await supabaseClient
           .from('leaderboard')
           .insert([
             { 
               player_name: playerName, 
               score: finalScore,
-              session_duration: sessionDuration,
-              session_start: sessionStart
+              session_duration: verifiedDuration,  // Use verified duration from heartbeats
+              session_start: new Date(gameStartTimestamp).toISOString(),
+              session_id: currentSessionId,
+              heartbeat_count: heartbeatCount
             }
           ]);
           
