@@ -542,13 +542,14 @@
     }
     
     // Adjust player size and position based on device
+    // Rocket Pizza image has ~4:3 aspect ratio (wider than tall)
     function getPlayerSize() {
       if (isMobilePortrait()) {
         // Mobile portrait: 30% smaller (70% of original size)
-        return 105; // 150 * 0.7 = 105
+        return { width: 137, height: 105 }; // ~1.3:1 ratio, scaled down
       } else {
         // Desktop or landscape: original size
-        return 150;
+        return { width: 195, height: 150 }; // ~1.3:1 ratio to match actual image
       }
     }
     
@@ -590,7 +591,7 @@
     
     // Create a container for the player so we can rotate it properly
     const playerContainer = new THREE.Object3D();
-    const playerSize = getPlayerSize();
+    const playerSizeObj = getPlayerSize();
     const playerXPosition = getPlayerXPosition();
     playerContainer.position.set(playerXPosition, 0, 0);
     scene.add(playerContainer);
@@ -601,9 +602,9 @@
       transparent: true
     });
     const player = new THREE.Sprite(playerMaterial);
-    player.scale.set(playerSize, playerSize, 1);
-    player.width = playerSize;
-    player.height = playerSize;
+    player.scale.set(playerSizeObj.width, playerSizeObj.height, 1);
+    player.width = playerSizeObj.width;
+    player.height = playerSizeObj.height;
     // Add sprite to container instead of directly to scene
     playerContainer.add(player);
     
@@ -1646,9 +1647,9 @@
         width = 60;
         height = 60;
       } else if (type === 'enemy') {
-        // Blue mutant - make it 25% bigger
-        width = 250; // Increased from 200 to 250 (25% larger)
-        height = 125; // Increased from 100 to 125 (25% larger)
+        // Blue mutant - correct aspect ratio (~1.2:1, slightly wider than tall)
+        width = 180; // Adjusted to match actual image aspect ratio
+        height = 150; // Adjusted to match actual image aspect ratio
       } else if (type === 'building') {
         // Bank building - make it much wider
         width = 240; // Increased from 180 to 240
@@ -3716,10 +3717,10 @@
       updateBackgroundAspectRatio();
       
       // Update player size and position for responsive design
-      const playerSize = getPlayerSize();
-      player.scale.set(playerSize, playerSize, 1);
-      player.width = playerSize;
-      player.height = playerSize;
+      const playerSizeObj = getPlayerSize();
+      player.scale.set(playerSizeObj.width, playerSizeObj.height, 1);
+      player.width = playerSizeObj.width;
+      player.height = playerSizeObj.height;
       
       // Update player position
       const playerXPosition = getPlayerXPosition();
