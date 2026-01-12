@@ -1637,30 +1637,33 @@
       
       let texture = textureCache[type];
       
-      // Define sizes with fixed width-to-height ratios
+      // Scale factor for mobile devices (70% of desktop size)
+      const scaleFactor = isMobilePortrait() ? 0.7 : 1.0;
+      
+      // Define sizes with fixed width-to-height ratios, scaled for device
       let width, height;
       
       if (type === 'pizza') {
-        width = 60;
-        height = 60;
+        width = 60 * scaleFactor;
+        height = 60 * scaleFactor;
       } else if (type === 'bitcoin') {
-        width = 60;
-        height = 60;
+        width = 60 * scaleFactor;
+        height = 60 * scaleFactor;
       } else if (type === 'enemy') {
-        // Blue mutant - correct aspect ratio (~1.45:1, wider due to extended fists)
-        width = 215; // Adjusted to match actual image aspect ratio with fists
-        height = 150; // Adjusted to match actual image aspect ratio
+        // Blue mutant - match original image aspect ratio (~1.67:1)
+        width = 250 * scaleFactor;
+        height = 150 * scaleFactor;
       } else if (type === 'building') {
         // Bank building - make it much wider
-        width = 240; // Increased from 180 to 240
-        height = 200;
+        width = 240 * scaleFactor;
+        height = 200 * scaleFactor;
       } else if (type === 'candle') {
-        width = 80;
-        height = 120;
+        width = 80 * scaleFactor;
+        height = 120 * scaleFactor;
       } else if (type === 'candleLong') {
-        width = 80;
+        width = 80 * scaleFactor;
         // Varying height for the long candles
-        height = 200 + Math.random() * 300; // Between 200-500 pixels tall
+        height = (200 + Math.random() * 300) * scaleFactor; // Between 200-500 pixels tall, scaled
       }
 
       // Create material with proper transparency settings
