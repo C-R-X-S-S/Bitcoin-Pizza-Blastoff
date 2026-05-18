@@ -1,5 +1,5 @@
 (function () {
-  const MODEL_URL = window.BLASTOFF_MODEL_URL || './assets/hot_air_food_truck_ar.glb'
+  const MODEL_URL = './assets/hot_air_food_truck_ar.glb'
   const OVERHEAD_METERS = 3.05
   const FORWARD_METERS = 0.9
   const MAX_DEVICE_PIXEL_RATIO = 2
@@ -22,11 +22,24 @@
 
   function viewportSize() {
     const vv = window.visualViewport
+    const doc = document.documentElement
+    const widths = [
+      window.innerWidth,
+      doc.clientWidth,
+      vv ? vv.width : 0,
+    ]
+    const heights = [
+      window.innerHeight,
+      doc.clientHeight,
+      vv ? vv.height : 0,
+      screen && screen.height ? Math.min(screen.height, screen.width * 2.4) : 0,
+    ]
+
     return {
-      width: Math.max(320, Math.round(vv ? vv.width : window.innerWidth)),
-      height: Math.max(320, Math.round(vv ? vv.height : window.innerHeight)),
-      left: Math.round(vv ? vv.offsetLeft : 0),
-      top: Math.round(vv ? vv.offsetTop : 0),
+      width: Math.max(320, Math.round(Math.max(...widths.filter(Boolean)))),
+      height: Math.max(480, Math.round(Math.max(...heights.filter(Boolean)))),
+      left: 0,
+      top: 0,
     }
   }
 
@@ -42,10 +55,8 @@
     canvas.style.width = `${size.width}px`
     canvas.style.height = `${size.height}px`
 
-    if (!xrStarted) {
-      canvas.width = Math.round(size.width * dpr)
-      canvas.height = Math.round(size.height * dpr)
-    }
+    canvas.width = Math.round(size.width * dpr)
+    canvas.height = Math.round(size.height * dpr)
 
     if (xrScene && xrScene.renderer) {
       xrScene.renderer.setPixelRatio(dpr)
@@ -63,46 +74,8 @@
     unsupported.querySelector('p').textContent = message
   }
 
-  function showUnsupportedBrowser(title, message) {
-    launch.hidden = true
-    hud.hidden = true
-    unsupported.hidden = false
-    unsupported.querySelector('h1').textContent = title
-    unsupported.querySelector('p').textContent = message
-  }
-
   function isLikelyMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-  }
-
-  function isIOS() {
-    return /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  }
-
-  function isLikelyIOSSafari() {
-    const ua = navigator.userAgent
-    const hasSafariToken = /Safari/i.test(ua)
-    const knownAlternateIOSBrowser = /(CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|Brave|YaBrowser|Mercury|SamsungBrowser)/i.test(ua)
-    return isIOS() && hasSafariToken && !knownAlternateIOSBrowser
-  }
-
-  async function isBraveBrowser() {
-    if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
-      try {
-        return await navigator.brave.isBrave()
-      } catch (error) {
-        return false
-      }
-    }
-
-    return /Brave\//i.test(navigator.userAgent)
-  }
-
-  async function hasKnownBrokenARViewport() {
-    if (!isIOS()) return false
-    if (!isLikelyIOSSafari()) return true
-    return await isBraveBrowser()
   }
 
   function hasCameraAPI() {
@@ -174,6 +147,9 @@
   function overheadTruckModule() {
     return {
       name: 'overhead-truck-module',
+      onCanvasSizeChange: syncViewportSize,
+      onVideoSizeChange: syncViewportSize,
+      onDeviceOrientationChange: syncViewportSize,
       onStart: async () => {
         xrScene = XR8.Threejs.xrScene()
         const {scene, renderer} = xrScene
@@ -222,14 +198,6 @@
     setStatus('Starting camera...')
 
     try {
-      if (await hasKnownBrokenARViewport()) {
-        showUnsupportedBrowser(
-          'Open in Safari',
-          'This iPhone browser is rendering the AR camera view incorrectly. Open this same link in Safari, then tap Start AR.'
-        )
-        return
-      }
-
       const XR8 = await waitForEngine()
 
       if (!hasCameraAPI()) {
@@ -272,22 +240,14 @@
 
   syncViewportSize()
 
-  hasKnownBrokenARViewport().then((isBroken) => {
-    if (isBroken) {
-      showUnsupportedBrowser(
-        'Open in Safari',
-        'This iPhone browser is rendering the AR camera view incorrectly. Open this same link in Safari, then tap Start AR.'
-      )
-      return
-    }
-
-    if (!isLikelyMobile()) {
-      setStatus('Ready. Test the final QR on a phone over HTTPS.')
-      return
-    }
+  if (!isLikelyMobile()) {
+    setStatus('Ready. Test the final QR on a phone over HTTPS.')
+  } else {
+    setStatus('Ready for camera.')
+    syncViewportSize()
 
     waitForEngine()
       .then(() => setStatus('Ready for camera.'))
       .catch((error) => setStatus(error.message))
-  })
+  }
 })()
