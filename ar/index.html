@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1610">
+    <title>Bitcoin Pizza Blastoff AR</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <canvas id="camerafeed" aria-label="AR camera view"></canvas>
+
+    <main id="launch" class="panel">
+      <img src="./assets/hot_air_food_truck_ar_preview.png" alt="Hot air pizza truck preview">
+      <h1>Bitcoin Pizza Blastoff</h1>
+      <p>Open the camera, point your phone at the sky, and look for the floating pizza truck.</p>
+      <button id="startButton" type="button">Start AR</button>
+      <div id="status">Loading AR engine...</div>
+    </main>
+
+    <div id="hud" hidden>
+      <span id="hudText">Point your phone at the sky</span>
+      <button id="recenterButton" type="button">Recenter</button>
+    </div>
+
+    <div id="unsupported" class="panel" hidden>
+      <h1>Open on a phone</h1>
+      <p>This AR view needs a mobile browser with camera access over HTTPS.</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.135.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js"
+      async
+      crossorigin="anonymous"
+      data-preload-chunks="slam">
+    </script>
+    <script src="./app.js" defer></script>
+  </body>
+</html>

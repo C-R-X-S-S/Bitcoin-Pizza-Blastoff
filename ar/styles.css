@@ -1,0 +1,123 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #07120b;
+  color: #fff8dc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  min-height: 100svh;
+  background: radial-gradient(circle at 50% 0%, #224833 0%, #08130c 52%, #020503 100%);
+}
+
+#camerafeed {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.panel {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  text-align: center;
+  background: linear-gradient(180deg, rgba(7, 18, 11, 0.56), rgba(7, 18, 11, 0.95));
+}
+
+.panel img {
+  width: min(68vw, 320px);
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(32px, 10vw, 56px);
+  line-height: 0.95;
+}
+
+p {
+  max-width: 34ch;
+  margin: 0;
+  color: rgba(255, 248, 220, 0.86);
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+button {
+  min-width: 148px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 8px;
+  background: #ffd71a;
+  color: #101006;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+#status {
+  min-height: 22px;
+  color: rgba(255, 248, 220, 0.74);
+  font-size: 14px;
+}
+
+#hud {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 14px;
+  pointer-events: none;
+}
+
+#hudText {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: rgba(2, 5, 3, 0.72);
+  color: #fff8dc;
+  font-size: 14px;
+}
+
+#recenterButton {
+  min-width: 104px;
+  min-height: 40px;
+  pointer-events: auto;
+}
