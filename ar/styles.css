@@ -43,14 +43,15 @@ body {
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 16px;
+  gap: 12px;
   padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
   text-align: center;
   background: linear-gradient(180deg, rgba(7, 18, 11, 0.56), rgba(7, 18, 11, 0.95));
 }
 
 .panel img {
-  width: min(68vw, 320px);
+  width: min(92vw, 520px);
+  max-height: min(48vh, 440px);
   aspect-ratio: 3 / 4;
   object-fit: contain;
   border-radius: 8px;
@@ -60,6 +61,19 @@ h1 {
   margin: 0;
   font-size: clamp(32px, 10vw, 56px);
   line-height: 0.95;
+}
+
+.brand-heading {
+  font-size: clamp(18px, 5vw, 28px);
+  line-height: 1.05;
+}
+
+.experience-heading {
+  margin: 0;
+  color: #fff8dc;
+  font-size: clamp(44px, 14vw, 76px);
+  font-weight: 900;
+  line-height: 0.92;
 }
 
 p {
