@@ -52,9 +52,12 @@ body {
 .panel img {
   width: min(92vw, 520px);
   max-height: min(48vh, 440px);
-  aspect-ratio: 3 / 4;
   object-fit: contain;
   border-radius: 8px;
+}
+
+.splash-art {
+  aspect-ratio: 657 / 661;
 }
 
 h1 {
