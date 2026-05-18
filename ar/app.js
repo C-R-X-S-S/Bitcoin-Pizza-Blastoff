@@ -61,6 +61,9 @@
     if (xrScene && xrScene.renderer) {
       xrScene.renderer.setPixelRatio(dpr)
       xrScene.renderer.setSize(size.width, size.height, false)
+      xrScene.renderer.setViewport(0, 0, size.width, size.height)
+      xrScene.renderer.setScissor(0, 0, size.width, size.height)
+      xrScene.renderer.setScissorTest(false)
     }
   }
 
@@ -179,6 +182,8 @@
         }
       },
       onUpdate: () => {
+        syncViewportSize()
+
         if (!truckRoot) return
 
         const elapsed = performance.now() * 0.001
@@ -209,12 +214,20 @@
         disableWorldTracking: false,
       })
 
-      XR8.addCameraPipelineModules([
+      const modules = []
+
+      if (window.XRExtras && window.XRExtras.FullWindowCanvas) {
+        modules.push(window.XRExtras.FullWindowCanvas.pipelineModule())
+      }
+
+      modules.push(
         XR8.GlTextureRenderer.pipelineModule(),
         XR8.Threejs.pipelineModule(),
         XR8.XrController.pipelineModule(),
-        overheadTruckModule(),
-      ])
+        overheadTruckModule()
+      )
+
+      XR8.addCameraPipelineModules(modules)
 
       syncViewportSize()
       XR8.run({canvas})
