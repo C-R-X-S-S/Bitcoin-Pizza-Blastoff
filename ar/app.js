@@ -80,6 +80,13 @@
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   }
 
+  function isLikelyIOSSafari() {
+    const ua = navigator.userAgent
+    const hasSafariToken = /Safari/i.test(ua)
+    const knownAlternateIOSBrowser = /(CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|Brave|YaBrowser|Mercury|SamsungBrowser)/i.test(ua)
+    return isIOS() && hasSafariToken && !knownAlternateIOSBrowser
+  }
+
   async function isBraveBrowser() {
     if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
       try {
@@ -93,7 +100,9 @@
   }
 
   async function hasKnownBrokenARViewport() {
-    return isIOS() && await isBraveBrowser()
+    if (!isIOS()) return false
+    if (!isLikelyIOSSafari()) return true
+    return await isBraveBrowser()
   }
 
   function hasCameraAPI() {
@@ -216,7 +225,7 @@
       if (await hasKnownBrokenARViewport()) {
         showUnsupportedBrowser(
           'Open in Safari',
-          'Brave on iPhone is currently rendering the AR camera view at the wrong height. Open this same link in Safari for the full-screen AR view.'
+          'This iPhone browser is rendering the AR camera view incorrectly. Open this same link in Safari, then tap Start AR.'
         )
         return
       }
@@ -267,7 +276,7 @@
     if (isBroken) {
       showUnsupportedBrowser(
         'Open in Safari',
-        'Brave on iPhone is currently rendering the AR camera view at the wrong height. Open this same link in Safari for the full-screen AR view.'
+        'This iPhone browser is rendering the AR camera view incorrectly. Open this same link in Safari, then tap Start AR.'
       )
       return
     }
