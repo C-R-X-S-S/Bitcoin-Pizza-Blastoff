@@ -63,8 +63,37 @@
     unsupported.querySelector('p').textContent = message
   }
 
+  function showUnsupportedBrowser(title, message) {
+    launch.hidden = true
+    hud.hidden = true
+    unsupported.hidden = false
+    unsupported.querySelector('h1').textContent = title
+    unsupported.querySelector('p').textContent = message
+  }
+
   function isLikelyMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  }
+
+  function isIOS() {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  }
+
+  async function isBraveBrowser() {
+    if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+      try {
+        return await navigator.brave.isBrave()
+      } catch (error) {
+        return false
+      }
+    }
+
+    return /Brave\//i.test(navigator.userAgent)
+  }
+
+  async function hasKnownBrokenARViewport() {
+    return isIOS() && await isBraveBrowser()
   }
 
   function hasCameraAPI() {
@@ -184,6 +213,14 @@
     setStatus('Starting camera...')
 
     try {
+      if (await hasKnownBrokenARViewport()) {
+        showUnsupportedBrowser(
+          'Open in Safari',
+          'Brave on iPhone is currently rendering the AR camera view at the wrong height. Open this same link in Safari for the full-screen AR view.'
+        )
+        return
+      }
+
       const XR8 = await waitForEngine()
 
       if (!hasCameraAPI()) {
@@ -226,11 +263,22 @@
 
   syncViewportSize()
 
-  if (!isLikelyMobile()) {
-    setStatus('Ready. Test the final QR on a phone over HTTPS.')
-  } else {
+  hasKnownBrokenARViewport().then((isBroken) => {
+    if (isBroken) {
+      showUnsupportedBrowser(
+        'Open in Safari',
+        'Brave on iPhone is currently rendering the AR camera view at the wrong height. Open this same link in Safari for the full-screen AR view.'
+      )
+      return
+    }
+
+    if (!isLikelyMobile()) {
+      setStatus('Ready. Test the final QR on a phone over HTTPS.')
+      return
+    }
+
     waitForEngine()
       .then(() => setStatus('Ready for camera.'))
       .catch((error) => setStatus(error.message))
-  }
+  })
 })()
