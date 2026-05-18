@@ -1,5 +1,5 @@
 (function () {
-  const MODEL_URL = './assets/hot_air_food_truck_ar.glb'
+  const MODEL_URL = window.BLASTOFF_MODEL_URL || './assets/hot_air_food_truck_ar.glb'
   const OVERHEAD_METERS = 3.05
   const FORWARD_METERS = 0.9
   const MAX_DEVICE_PIXEL_RATIO = 2

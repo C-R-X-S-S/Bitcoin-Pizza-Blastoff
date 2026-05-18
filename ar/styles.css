@@ -82,6 +82,25 @@ button {
   cursor: pointer;
 }
 
+button,
+.button {
+  text-decoration: none;
+}
+
+.button {
+  min-width: 148px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: #ffd71a;
+  color: #101006;
+  font: inherit;
+  font-weight: 800;
+}
+
 button:disabled {
   cursor: wait;
   opacity: 0.55;
