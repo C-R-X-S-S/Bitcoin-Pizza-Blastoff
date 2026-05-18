@@ -16,13 +16,14 @@
 html,
 body {
   width: 100%;
-  height: var(--app-height, 100dvh);
+  min-height: var(--app-height, 100dvh);
   margin: 0;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 body {
   min-height: var(--app-height, 100dvh);
+  overflow-y: auto;
   background: #addef5;
 }
 
@@ -41,17 +42,18 @@ body {
   inset: 0;
   min-height: var(--app-height, 100dvh);
   display: grid;
-  align-content: center;
+  align-content: start;
   justify-items: center;
-  gap: 12px;
-  padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  gap: clamp(8px, 1.5vh, 12px);
+  padding: max(10px, env(safe-area-inset-top)) 18px max(14px, env(safe-area-inset-bottom));
   text-align: center;
   background: #addef5;
+  overflow-y: auto;
 }
 
 .panel img {
-  width: min(92vw, 520px);
-  max-height: min(48vh, 440px);
+  width: min(88vw, 430px);
+  max-height: min(42vh, 360px);
   object-fit: contain;
   border-radius: 8px;
 }
@@ -67,14 +69,14 @@ h1 {
 }
 
 .brand-heading {
-  font-size: clamp(18px, 5vw, 28px);
+  font-size: clamp(15px, 4.2vw, 24px);
   line-height: 1.05;
 }
 
 .experience-heading {
   margin: 0;
   color: #06130d;
-  font-size: clamp(44px, 14vw, 76px);
+  font-size: clamp(34px, 11vw, 64px);
   font-weight: 900;
   line-height: 0.92;
 }
@@ -83,13 +85,13 @@ p {
   max-width: 34ch;
   margin: 0;
   color: rgba(6, 19, 13, 0.82);
-  font-size: 17px;
-  line-height: 1.4;
+  font-size: clamp(14px, 3.8vw, 17px);
+  line-height: 1.25;
 }
 
 button {
   min-width: 148px;
-  min-height: 48px;
+  min-height: 44px;
   border: 0;
   border-radius: 8px;
   background: #ffd71a;
@@ -105,9 +107,9 @@ button:disabled {
 }
 
 #status {
-  min-height: 22px;
+  min-height: 18px;
   color: rgba(6, 19, 13, 0.62);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 #hud {
