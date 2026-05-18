@@ -22,24 +22,11 @@
 
   function viewportSize() {
     const vv = window.visualViewport
-    const doc = document.documentElement
-    const widths = [
-      window.innerWidth,
-      doc.clientWidth,
-      vv ? vv.width : 0,
-    ]
-    const heights = [
-      window.innerHeight,
-      doc.clientHeight,
-      vv ? vv.height : 0,
-      screen && screen.height ? Math.min(screen.height, screen.width * 2.4) : 0,
-    ]
-
     return {
-      width: Math.max(320, Math.round(Math.max(...widths.filter(Boolean)))),
-      height: Math.max(480, Math.round(Math.max(...heights.filter(Boolean)))),
-      left: 0,
-      top: 0,
+      width: Math.max(320, Math.round(vv ? vv.width : window.innerWidth)),
+      height: Math.max(320, Math.round(vv ? vv.height : window.innerHeight)),
+      left: Math.round(vv ? vv.offsetLeft : 0),
+      top: Math.round(vv ? vv.offsetTop : 0),
     }
   }
 
@@ -55,15 +42,14 @@
     canvas.style.width = `${size.width}px`
     canvas.style.height = `${size.height}px`
 
-    canvas.width = Math.round(size.width * dpr)
-    canvas.height = Math.round(size.height * dpr)
+    if (!xrStarted) {
+      canvas.width = Math.round(size.width * dpr)
+      canvas.height = Math.round(size.height * dpr)
+    }
 
     if (xrScene && xrScene.renderer) {
       xrScene.renderer.setPixelRatio(dpr)
       xrScene.renderer.setSize(size.width, size.height, false)
-      xrScene.renderer.setViewport(0, 0, size.width, size.height)
-      xrScene.renderer.setScissor(0, 0, size.width, size.height)
-      xrScene.renderer.setScissorTest(false)
     }
   }
 
@@ -182,8 +168,6 @@
         }
       },
       onUpdate: () => {
-        syncViewportSize()
-
         if (!truckRoot) return
 
         const elapsed = performance.now() * 0.001
@@ -214,20 +198,12 @@
         disableWorldTracking: false,
       })
 
-      const modules = []
-
-      if (window.XRExtras && window.XRExtras.FullWindowCanvas) {
-        modules.push(window.XRExtras.FullWindowCanvas.pipelineModule())
-      }
-
-      modules.push(
+      XR8.addCameraPipelineModules([
         XR8.GlTextureRenderer.pipelineModule(),
         XR8.Threejs.pipelineModule(),
         XR8.XrController.pipelineModule(),
-        overheadTruckModule()
-      )
-
-      XR8.addCameraPipelineModules(modules)
+        overheadTruckModule(),
+      ])
 
       syncViewportSize()
       XR8.run({canvas})
