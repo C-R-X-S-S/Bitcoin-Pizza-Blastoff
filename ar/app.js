@@ -2,6 +2,7 @@
   const MODEL_URL = './assets/hot_air_food_truck_ar.glb'
   const OVERHEAD_METERS = 3.05
   const FORWARD_METERS = 0.9
+  const MAX_DEVICE_PIXEL_RATIO = 2
 
   const canvas = document.getElementById('camerafeed')
   const launch = document.getElementById('launch')
@@ -18,6 +19,39 @@
   let mixer
   let clock
   let xrScene
+
+  function viewportSize() {
+    const vv = window.visualViewport
+    return {
+      width: Math.max(320, Math.round(vv ? vv.width : window.innerWidth)),
+      height: Math.max(320, Math.round(vv ? vv.height : window.innerHeight)),
+      left: Math.round(vv ? vv.offsetLeft : 0),
+      top: Math.round(vv ? vv.offsetTop : 0),
+    }
+  }
+
+  function syncViewportSize() {
+    const size = viewportSize()
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO)
+
+    document.documentElement.style.setProperty('--app-height', `${size.height}px`)
+    document.documentElement.style.setProperty('--app-width', `${size.width}px`)
+
+    canvas.style.left = `${size.left}px`
+    canvas.style.top = `${size.top}px`
+    canvas.style.width = `${size.width}px`
+    canvas.style.height = `${size.height}px`
+
+    if (!xrStarted) {
+      canvas.width = Math.round(size.width * dpr)
+      canvas.height = Math.round(size.height * dpr)
+    }
+
+    if (xrScene && xrScene.renderer) {
+      xrScene.renderer.setPixelRatio(dpr)
+      xrScene.renderer.setSize(size.width, size.height, false)
+    }
+  }
 
   function setStatus(message) {
     statusEl.textContent = message
@@ -107,6 +141,7 @@
         const {scene, renderer} = xrScene
 
         renderer.outputEncoding = THREE.sRGBEncoding
+        syncViewportSize()
         clock = new THREE.Clock()
 
         const hemi = new THREE.HemisphereLight(0xffffff, 0x28402e, 1.45)
@@ -167,6 +202,7 @@
         overheadTruckModule(),
       ])
 
+      syncViewportSize()
       XR8.run({canvas})
       xrStarted = true
       launch.hidden = true
@@ -180,6 +216,15 @@
 
   recenterButton.addEventListener('click', recenterTruck)
   startButton.addEventListener('click', startAR)
+  window.addEventListener('resize', syncViewportSize)
+  window.addEventListener('orientationchange', () => setTimeout(syncViewportSize, 350))
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncViewportSize)
+    window.visualViewport.addEventListener('scroll', syncViewportSize)
+  }
+
+  syncViewportSize()
 
   if (!isLikelyMobile()) {
     setStatus('Ready. Test the final QR on a phone over HTTPS.')
