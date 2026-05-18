@@ -1,7 +1,7 @@
 :root {
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #a9d9eb;
+  background: #addef5;
   color: #06130d;
 }
 
@@ -23,7 +23,7 @@ body {
 
 body {
   min-height: var(--app-height, 100dvh);
-  background: #a9d9eb;
+  background: #addef5;
 }
 
 #camerafeed {
@@ -46,7 +46,7 @@ body {
   gap: 12px;
   padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
   text-align: center;
-  background: #a9d9eb;
+  background: #addef5;
 }
 
 .panel img {
