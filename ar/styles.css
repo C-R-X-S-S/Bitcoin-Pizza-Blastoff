@@ -1,8 +1,8 @@
 :root {
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #07120b;
-  color: #fff8dc;
+  background: #a9d9eb;
+  color: #06130d;
 }
 
 * {
@@ -23,7 +23,7 @@ body {
 
 body {
   min-height: var(--app-height, 100dvh);
-  background: radial-gradient(circle at 50% 0%, #224833 0%, #08130c 52%, #020503 100%);
+  background: #a9d9eb;
 }
 
 #camerafeed {
@@ -46,7 +46,7 @@ body {
   gap: 12px;
   padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
   text-align: center;
-  background: linear-gradient(180deg, rgba(7, 18, 11, 0.56), rgba(7, 18, 11, 0.95));
+  background: #a9d9eb;
 }
 
 .panel img {
@@ -73,7 +73,7 @@ h1 {
 
 .experience-heading {
   margin: 0;
-  color: #fff8dc;
+  color: #06130d;
   font-size: clamp(44px, 14vw, 76px);
   font-weight: 900;
   line-height: 0.92;
@@ -82,7 +82,7 @@ h1 {
 p {
   max-width: 34ch;
   margin: 0;
-  color: rgba(255, 248, 220, 0.86);
+  color: rgba(6, 19, 13, 0.82);
   font-size: 17px;
   line-height: 1.4;
 }
@@ -106,7 +106,7 @@ button:disabled {
 
 #status {
   min-height: 22px;
-  color: rgba(255, 248, 220, 0.74);
+  color: rgba(6, 19, 13, 0.62);
   font-size: 14px;
 }
 
